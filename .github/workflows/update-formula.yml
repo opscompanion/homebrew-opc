@@ -1,0 +1,96 @@
+name: Update Formula
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"  # check every 15 minutes
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get latest release
+        id: release
+        run: |
+          LATEST=$(curl -s https://api.github.com/repos/opscompanion/opc/releases/latest | jq -r .tag_name)
+          VERSION=${LATEST#v}
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$LATEST" >> "$GITHUB_OUTPUT"
+
+          CURRENT=$(grep 'version "' Formula/opc.rb | head -1 | sed 's/.*version "//;s/"//')
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+
+          if [ "$VERSION" = "$CURRENT" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update formula
+        if: steps.release.outputs.skip == 'false'
+        run: |
+          VERSION="${{ steps.release.outputs.version }}"
+          TAG="${{ steps.release.outputs.tag }}"
+          BASE="https://github.com/opscompanion/opc/releases/download/${TAG}"
+
+          # Download and checksum each archive
+          for arch in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do
+            curl -sL "${BASE}/opc_${arch}.tar.gz" -o "/tmp/opc_${arch}.tar.gz"
+            eval "SHA_${arch}=$(sha256sum /tmp/opc_${arch}.tar.gz | cut -d' ' -f1)"
+          done
+
+          cat > Formula/opc.rb << FORMULA
+          class Opc < Formula
+            desc "CLI companion for platform engineers — persistent context, memory, and session management"
+            homepage "https://github.com/opscompanion/opc"
+            version "${VERSION}"
+            license "MIT"
+
+            on_macos do
+              on_arm do
+                url "${BASE}/opc_darwin_arm64.tar.gz"
+                sha256 "${SHA_darwin_arm64}"
+              end
+              on_intel do
+                url "${BASE}/opc_darwin_amd64.tar.gz"
+                sha256 "${SHA_darwin_amd64}"
+              end
+            end
+
+            on_linux do
+              on_arm do
+                url "${BASE}/opc_linux_arm64.tar.gz"
+                sha256 "${SHA_linux_arm64}"
+              end
+              on_intel do
+                url "${BASE}/opc_linux_amd64.tar.gz"
+                sha256 "${SHA_linux_amd64}"
+              end
+            end
+
+            def install
+              bin.install "opc"
+            end
+
+            test do
+              system "#{bin}/opc", "version"
+            end
+          end
+          FORMULA
+
+          # Remove leading whitespace from heredoc
+          sed -i 's/^          //' Formula/opc.rb
+
+      - name: Commit and push
+        if: steps.release.outputs.skip == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/opc.rb
+          git commit -m "Update opc to ${{ steps.release.outputs.version }}"
+          git push

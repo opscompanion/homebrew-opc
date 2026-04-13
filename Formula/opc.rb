@@ -5,21 +5,21 @@
 class Opc < Formula
   desc "CLI companion for platform engineers — persistent context, memory, and session management"
   homepage "https://github.com/opscompanion/opc"
-  version "0.8.0"
+  version "0.8.1"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/opscompanion/opc/releases/download/v0.8.0/opc_darwin_amd64.tar.gz"
-      sha256 "8b60327bfc69520567e4a5d93e1ffaf079455c8cfefc19bfda69e78bc7d8598c"
+      url "https://github.com/opscompanion/opc/releases/download/v0.8.1/opc_darwin_amd64.tar.gz"
+      sha256 "7895a88d54ec0c2f3e15c63f2f7ac3af6ea37191790b45b69014931ca6af6b14"
 
       define_method(:install) do
         bin.install "opc"
       end
     end
     if Hardware::CPU.arm?
-      url "https://github.com/opscompanion/opc/releases/download/v0.8.0/opc_darwin_arm64.tar.gz"
-      sha256 "cd736390eaa70a28e4c2a1dd8eedf23ede1de0fad78edfabc46478d2111a47be"
+      url "https://github.com/opscompanion/opc/releases/download/v0.8.1/opc_darwin_arm64.tar.gz"
+      sha256 "d78238785689d3c47fef8c3247ed5a22822258346b0e047d969751007c0b97eb"
 
       define_method(:install) do
         bin.install "opc"
@@ -29,15 +29,15 @@ class Opc < Formula
 
   on_linux do
     if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
-      url "https://github.com/opscompanion/opc/releases/download/v0.8.0/opc_linux_amd64.tar.gz"
-      sha256 "ae789e57f8b1220c6f211896d642ef453bfc027267aae571dfd9727eb5d70510"
+      url "https://github.com/opscompanion/opc/releases/download/v0.8.1/opc_linux_amd64.tar.gz"
+      sha256 "5002de657a86002a76cba6b6aa6b9a3b7766f68dd66f7ae77c8db89b1fecd8a7"
       define_method(:install) do
         bin.install "opc"
       end
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/opscompanion/opc/releases/download/v0.8.0/opc_linux_arm64.tar.gz"
-      sha256 "41ac1c4e6ec96c176f27a4a9dce107b40296f422b7013619d7936d6efd088a05"
+      url "https://github.com/opscompanion/opc/releases/download/v0.8.1/opc_linux_arm64.tar.gz"
+      sha256 "d779744381afe902ef86f7eb45436e59589ed3ba8e81a773b8b4a4dcd0e7b3ae"
       define_method(:install) do
         bin.install "opc"
       end
